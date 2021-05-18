@@ -249,9 +249,6 @@ open class GDWebViewController: UIViewController, WKNavigationDelegate, WKUIDele
     open func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard ((delegate?.webViewController?(self, decidePolicyForNavigationAction: navigationAction, decisionHandler: { (policy) -> Void in
             decisionHandler(policy)
-            if policy == .cancel {
-                self.showError("This navigation is prohibited.")
-            }
         })) != nil)
             else {
                 decisionHandler(.allow);
@@ -260,11 +257,13 @@ open class GDWebViewController: UIViewController, WKNavigationDelegate, WKUIDele
     }
     
     open func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { (cookies) in
+            for cookie in cookies {
+                HTTPCookieStorage.shared.setCookie(cookie)
+            }
+        }
         guard ((delegate?.webViewController?(self, decidePolicyForNavigationResponse: navigationResponse, decisionHandler: { (policy) -> Void in
             decisionHandler(policy)
-            if policy == .cancel {
-                self.showError("This navigation response is prohibited.")
-            }
         })) != nil)
             else {
                 decisionHandler(.allow)
@@ -461,8 +460,16 @@ open class GDWebViewController: UIViewController, WKNavigationDelegate, WKUIDele
         self.commonInit()
     }
     
-    func commonInit() {
-        webView = WKWebView()
+    open func commonInit() {
+        let config = WKWebViewConfiguration()
+        config.websiteDataStore = WKWebsiteDataStore.default()
+        if let cookies = HTTPCookieStorage.shared.cookies {
+            for cookie in cookies {
+                let store = WKWebsiteDataStore.default().httpCookieStore
+                store.setCookie(cookie, completionHandler: nil)
+            }
+        }
+        webView = WKWebView(frame: CGRect.zero, configuration: config)
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
