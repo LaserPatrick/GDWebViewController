@@ -460,16 +460,25 @@ open class GDWebViewController: UIViewController, WKNavigationDelegate, WKUIDele
         self.commonInit()
     }
     
-    open func commonInit() {
+    static var config: WKWebViewConfiguration {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = WKWebsiteDataStore.default()
-        if let cookies = HTTPCookieStorage.shared.cookies {
+        return config
+    }
+    
+    open func commonInit() {
+        GDWebViewController.config.websiteDataStore.httpCookieStore.getAllCookies { (cookies) in
             for cookie in cookies {
-                let store = WKWebsiteDataStore.default().httpCookieStore
-                store.setCookie(cookie, completionHandler: nil)
+                GDWebViewController.config.websiteDataStore.httpCookieStore.delete(cookie, completionHandler: nil)
+            }
+            if let cookies = HTTPCookieStorage.shared.cookies {
+                for cookie in cookies {
+                    let store = GDWebViewController.config.websiteDataStore.httpCookieStore
+                    store.setCookie(cookie, completionHandler: nil)
+                }
             }
         }
-        webView = WKWebView(frame: CGRect.zero, configuration: config)
+        webView = WKWebView(frame: CGRect.zero, configuration: GDWebViewController.config)
         webView.navigationDelegate = self
         webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
