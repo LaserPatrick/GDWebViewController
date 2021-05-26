@@ -471,8 +471,8 @@ open class GDWebViewController: UIViewController, WKNavigationDelegate, WKUIDele
             for cookie in cookies {
                 GDWebViewController.config.websiteDataStore.httpCookieStore.delete(cookie, completionHandler: nil)
             }
-            if let cookies = HTTPCookieStorage.shared.cookies {
-                for cookie in cookies {
+            if let cookies1 = HTTPCookieStorage.shared.cookies {
+                for cookie in cookies1 {
                     let store = GDWebViewController.config.websiteDataStore.httpCookieStore
                     store.setCookie(cookie, completionHandler: nil)
                 }
